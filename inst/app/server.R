@@ -1,5 +1,5 @@
 shinyServer(function(input, output, session) {
-  # Tab: Create Inquery ----
+  # Tab: Create Inquiry ----
   # Placeholder for DataFrame creation
   df <- reactiveVal(NULL)
 
@@ -22,7 +22,7 @@ shinyServer(function(input, output, session) {
       required = c(TRUE, FALSE)
     ))
     # notify user that the data frame was created
-    showNotification("An Inquery Template has been created.", duration = 5)
+    showNotification("An Inquiry Template has been created.", duration = 5)
   })
 
   # download template as json
@@ -43,7 +43,7 @@ shinyServer(function(input, output, session) {
     df()
   })
 
-  # Tab: Respond to Inquery ----
+  # Tab: Respond to Inquiry ----
   # Placeholder for survey responses
   survey_data <- reactiveVal()
 

@@ -1,0 +1,6 @@
+libLinux/*
+libWin/*
+.git
+.Rprofile
+Jenkinsfile
+Dockerfile

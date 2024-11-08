@@ -16,4 +16,5 @@ Imports:
   futile.logger,
   jsonlite,
   shiny,
-  shinysurveys
+  shinysurveys,
+  shinyTools

@@ -50,6 +50,7 @@ shinyServer(function(input, output, session) {
   observe({
     if (!is.null(survey_data())) {
       shinyjs::enable("downloadData", asis = TRUE)
+    } else {
       shinyjs::disable("downloadData", asis = TRUE)
     }
   })

@@ -15,13 +15,12 @@ tagList(
       sidebarLayout(
         sidebarPanel(
           width = 2,
-          actionButton("create_df", "Create Example Template"),
+          actionButton("create_df", "Load Example"),
           tags$br(), tags$br(),
           downloadButton("downloadTemplate", "Download")
         ),
         mainPanel(
-          tags$h3("Inquiry Template"),
-          tableOutput("df_table")
+          inquiryTemplateUI("inquiry_template"),
         ),
       )
     ),
@@ -30,7 +29,7 @@ tagList(
       sidebarLayout(
         sidebarPanel(
           width = 2,
-          actionButton("renderSurvey", "Load Inquiry Template"),
+          actionButton("renderSurvey", "Load Template"),
           tags$br(), tags$br(),
           downloadButton("downloadData", "Download")
         ),

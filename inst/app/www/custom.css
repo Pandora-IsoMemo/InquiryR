@@ -21,7 +21,6 @@ body {
 
 hr {
   border-top: 1px solid #000000;
-
 }
 
 .help-block {
@@ -31,15 +30,6 @@ hr {
 
 .form-group {
   margin-bottom: 0;
-}
-
-h4 {
-  font-weight: 700;
-}
-
-h5 {
-  font-weight: 700;
-  font-size: 1.1em;
 }
 
 .control-label {
@@ -109,21 +99,16 @@ h5 {
     color: white;
 }
 
-.matrix-input {
-    overflow-x: auto;
-}
-
-.matrix-input-table {
-    table-layout: fixed;
-    width: auto;
-}
-
-.matrix-input-table td {
-    min-width: 70px;
-}
-
 .shiny-notification {
   position: fixed;
   top: 80px;
   right: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px; /* Adds space between input fields */
+}
+
+.survey-container .form-group {
+  margin-bottom: 15px; /* Adds space between input fields only inside survey-container*/
 }

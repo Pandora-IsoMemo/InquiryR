@@ -29,7 +29,6 @@ shinyServer(function(input, output, session) {
     }
 
     updateSelectInput(session, "select_template", choices = choices)
-    updateSelectInput(session, "render_template", choices = choices)
   })
 
   # download template as json
@@ -44,14 +43,29 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  output$download_template_execute <- downloadHandler(
-    filename = function() { paste("inquiry_template", Sys.Date(), ".json", sep = "") },
-    content = function(file) {
-      # Convert to JSON
-      inquiry_template_json <- jsonlite::toJSON(reactiveValuesToList(submitted_templates()[[input$select_template]]), pretty = TRUE, auto_unbox = TRUE)
+  downloadType <- reactive({
+   if (isTRUE(is_encrypted(submitted_templates()[[input$select_template]]))) {
+     "bin"
+   } else {
+     "json"
+   }
+  })
 
-      # Download the JSON file
-      write(inquiry_template_json, file)
+  output$download_template_execute <- downloadHandler(
+    filename = function() { paste("inquiry_template_", Sys.Date(), ".", downloadType(), sep = "") },
+    content = function(file) {
+      selected_template <- submitted_templates()[[input$select_template]]
+
+      if (is_encrypted(selected_template)) {
+        # Write the encrypted template to a file
+        writeBin(selected_template, file)
+      } else {
+        # Convert to JSON
+        inquiry_template_json <- jsonlite::toJSON(submitted_templates()[[input$select_template]], pretty = TRUE, auto_unbox = TRUE)
+
+        # Download the JSON file
+        write(inquiry_template_json, file)
+      }
     }
   )
 
@@ -63,26 +77,10 @@ shinyServer(function(input, output, session) {
   })
 
   # Tab: Respond to Inquiry ----
-  inquiry_template <- empty_template()
-
-  observe({
-    # enable/disable render button
-    if (!is.null(input$render_template) && input$render_template != "") {
-      shinyjs::enable("render_template_execute", asis = TRUE)
-    } else {
-      shinyjs::disable("render_template_execute", asis = TRUE)
-    }
-  })
-
-  observeEvent(input$render_template_execute, {
-    entries <- names(submitted_templates()[[input$render_template]])
-    for (entry in entries) {
-      inquiry_template[[entry]] <- submitted_templates()[[input$render_template]][[entry]]
-    }
-  })
+  inquiry_template <- loadInquiryServer("load_template", submitted_templates)
 
   output$survey_ui <- renderUI({
-    shiny::validate(need(nrow(inquiry_template$questions) > 0, "Please create or load an Inquiry template first."))
+    shiny::validate(need(nrow(inquiry_template$questions) > 0, "Please load an inquiry first."))
 
     # Use a div container with a unique class to scope the survey styling
     div(class = "survey-container",

@@ -31,8 +31,7 @@ tagList(
       sidebarLayout(
         sidebarPanel(
           width = 2,
-          selectInput("render_template", "Load Template", choices = c("No inquiry available ..." = "")),
-          actionButton("render_template_execute", "Load"),
+          loadInquiryUI("load_template"),
           tags$br(), tags$br(),
           downloadButton("download_response", "Download Response")
         ),

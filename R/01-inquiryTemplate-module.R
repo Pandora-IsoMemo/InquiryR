@@ -100,7 +100,6 @@ inquiryTemplateUI <- function(id) {
       ),
       column(
         2,
-        align = "right",
         style = "margin-top: 1.5em;",
         actionButton(ns("add"), "Add", width = "100%")
       )
@@ -111,7 +110,7 @@ inquiryTemplateUI <- function(id) {
         10,
         selectInput(
           ns("remove_questions"),
-          "Remove question(s)",
+          "Remove Question(s)",
           choices = c("Please add questions first ..." = ""),
           multiple = TRUE,
           width = "100%"
@@ -119,16 +118,28 @@ inquiryTemplateUI <- function(id) {
       ),
       column(
         2,
-        align = "right",
         style = "margin-top: 1.5em;",
         actionButton(ns("remove"), "Remove", width = "100%")
       )
     ),
+    tags$hr(),
     tags$br(),
-    actionButton(ns("submit"), "Submit Inquiry Template"),
-    tags$br(),
-    tags$br(),
-    tableOutput(ns("questions_table"))
+    fluidRow(
+      column(10,
+             htmlOutput(ns("questions_header")),
+             tableOutput(ns("questions_table"))),
+      column(
+        2,
+        actionButton(ns("submit"), "Submit Template", width = "100%"),
+        checkboxInput(ns("add_password"), "Add Password"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.add_password",
+          passwordInput(ns("password"), "Password"),
+          checkboxInput(ns("show_password"), "Show Password", value = FALSE)
+        )
+      )
+    )
   )
 }
 
@@ -166,14 +177,29 @@ inquiryTemplateServer <- function(id, init_template) {
     }) %>% bindEvent(input$description)
 
 
+    # observe title ----
+    output$questions_header <- renderUI({
+      shiny::validate(need(
+        !is.null(init_template$title) && init_template$title != "",
+        "Please set a title ..."
+      ))
+
+      HTML(paste0(
+        "<h3>", init_template$title, "</h3>",
+        "<h4>", init_template$description, "</h4>",
+        "<br>",
+        "<p>Questions dataframe:</p>"
+      ))
+    })
+
     # observe questions ----
     output$questions_table <- renderTable({
       shiny::validate(need(
         nrow(init_template$questions) > 0,
-        "Please create an Inquiry template first."
+        "Please add questions first ..."
       ))
       init_template$questions
-    })
+    }, width = "100%")
 
     observe({
       logDebug("%s: Update 'input$remove_questions' choices.", id)
@@ -248,6 +274,9 @@ inquiryTemplateServer <- function(id, init_template) {
     }) %>%
       bindEvent(input$remove)
 
+    # show/hide password
+    observeShowPassword(input, id_password = ns("password"))
+
     # enable/disable 'Submit' button
     observe({
       logDebug("%s: Enable/Disable 'Submit' button.", id)
@@ -294,15 +323,54 @@ inquiryTemplateServer <- function(id, init_template) {
       req(isTRUE(save_template()))
       logDebug("%s: Save Inquiry Template.", id)
       new_templates <- submitted_templates()
-      new_templates[[init_template$title]] <- init_template
+
+      if (isFALSE(input$add_password)) {
+        new_template <- reactiveValuesToList(init_template)
+      }
+
+      if (isTRUE(input$add_password)) {
+        if (is.null(input$password) || input$password == "") {
+          showNotification("Please enter a password to encrypt the template.", duration = 5)
+          new_template <- NULL
+        } else{
+          # encrypt template using cyphr
+          key <- key_sodium(hash(charToRaw(input$password)))
+          message(input$password)
+          new_template <- encrypt_object(reactiveValuesToList(init_template), key)
+        }
+      }
+
+      # reset trigger
+      save_template(FALSE)
+
+      req(new_template)
+      new_templates[[init_template$title]] <- new_template
       submitted_templates(new_templates)
       # notify user that the template was submitted
       showNotification("An Inquiry Template has been saved", duration = 5)
-      save_template(FALSE)
+      # clean password
+      updateCheckboxInput(session, "show_password", value = FALSE)
+      updateTextInput(session, "password", value = "")
     }) %>%
       bindEvent(save_template())
 
     return(submitted_templates)
+  })
+}
+
+# Observe Show/Hide Password
+#
+# @param input The input object
+# @param id_password The password input id
+# @param input_show The checkbox input id
+observeShowPassword <- function(input, id_password, input_show = "show_password") {
+  observe({
+    logDebug("Show/Hide password.")
+    if (isTRUE(input[[input_show]])) {
+      shinyjs::runjs(sprintf("$('#%s').attr('type', 'text');", id_password))
+    } else {
+      shinyjs::runjs(sprintf("$('#%s').attr('type', 'password');", id_password))
+    }
   })
 }
 

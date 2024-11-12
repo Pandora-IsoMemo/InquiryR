@@ -35,12 +35,32 @@ inquiryTemplateUI <- function(id) {
     tags$br(),
     fluidRow(
       column(
-        10,
-        selectInput(
+        5,
+        pickerInput(
           ns("remove_questions"),
           "Remove Question(s)",
           choices = c("Please add questions first ..." = ""),
           multiple = TRUE,
+          options = list(
+            `actions-box` = TRUE,
+            `selected-text-format` = "count > 3",
+            `count-selected-text` = "{0} options selected"
+          ),
+          width = "100%"
+        )
+      ),
+      column(
+        5,
+        pickerInput(
+          ns("remove_options"),
+          "Remove Option(s)",
+          choices = c("Please select question(s) first ..." = ""),
+          multiple = TRUE,
+          options = list(
+            `actions-box` = TRUE,
+            `selected-text-format` = "count > 3",
+            `count-selected-text` = "{0} options selected"
+          ),
           width = "100%"
         )
       ),
@@ -50,6 +70,7 @@ inquiryTemplateUI <- function(id) {
         actionButton(ns("remove"), "Remove", width = "100%")
       )
     ),
+    # add option to remove option
     tags$hr(),
     tags$br(),
     fluidRow(
@@ -132,9 +153,11 @@ inquiryTemplateServer <- function(id, init_template) {
     observe({
       logDebug("%s: Update 'input$remove_questions' choices.", id)
       # update input$remove_questions
-      choices <- init_template$questions$input_id
-      names(choices) <- init_template$questions$question
-      updateSelectInput(session, "remove_questions", choices = choices)
+      choices_df <- init_template$questions[, c("input_id", "question")] %>%
+        distinct()
+      choices <- choices_df$input_id
+      names(choices) <- choices_df$question
+      updatePickerInput(session, "remove_questions", choices = choices)
     }) %>%
       bindEvent(init_template$questions,
                 ignoreInit = TRUE,
@@ -152,8 +175,12 @@ inquiryTemplateServer <- function(id, init_template) {
     observe({
       logDebug("%s: Enable/Disable 'Remove' button.", id)
       if (length(input$remove_questions) > 0) {
+        choices <- init_template$questions$option[init_template$questions$input_id %in% input$remove_questions] %>%
+          unique()
+        updatePickerInput(session, "remove_options", choices = choices, selected = choices)
         shinyjs::enable(ns("remove"), asis = TRUE)
       } else {
+        updatePickerInput(session, "remove_options", choices = c("Please select question(s) first ..." = ""))
         shinyjs::disable(ns("remove"), asis = TRUE)
       }
     })
@@ -162,7 +189,10 @@ inquiryTemplateServer <- function(id, init_template) {
     observe({
       logDebug("%s: Remove selected questions.", id)
       questions_df <- init_template$questions
-      questions_df <- questions_df[!questions_df$input_id %in% input$remove_questions, ]
+      remove_index <- (questions_df$input_id %in% input$remove_questions) &
+        (questions_df$option %in% input$remove_options)
+
+      questions_df <- questions_df[!remove_index, ]
       init_template$questions <- questions_df
     }) %>%
       bindEvent(input$remove)

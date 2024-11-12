@@ -15,7 +15,7 @@ shinyServer(function(input, output, session) {
       required = c(TRUE, FALSE)
     )
     # notify user that the data frame was created
-    showNotification("An Inquiry Template has been created.", duration = 5)
+    showNotification("An Inquiry Template has been loaded.", duration = 5)
   })
 
   submitted_templates <- inquiryTemplateServer("inquiry_template", init_template = loaded_template)

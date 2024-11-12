@@ -17,8 +17,9 @@ tagList(
           width = 2,
           actionButton("load_example", "Load Example"),
           tags$br(), tags$br(),
-          selectInput("download_template", "Download Template", choices = c("No inquiry available ..." = "")),
-          downloadButton("download_template_execute", "Download")
+          selectInput("select_template", "Select Template", choices = c("No inquiry available ..." = "")),
+          downloadButton("download_template_execute", "Download"),
+          actionButton("remove_template", "Remove"),
         ),
         mainPanel(
           inquiryTemplateUI("inquiry_template"),

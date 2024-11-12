@@ -28,17 +28,19 @@ shinyServer(function(input, output, session) {
       choices <- c("No inquiry available ..." = "")
     }
 
-    updateSelectInput(session, "download_template", choices = choices)
+    updateSelectInput(session, "select_template", choices = choices)
     updateSelectInput(session, "render_template", choices = choices)
   })
 
   # download template as json
   observe({
     # enable/disable download button
-    if (!is.null(input$download_template) && input$download_template != "") {
+    if (!is.null(input$select_template) && input$select_template != "") {
       shinyjs::enable("download_template_execute", asis = TRUE)
+      shinyjs::enable("remove_template", asis = TRUE)
     } else {
       shinyjs::disable("download_template_execute", asis = TRUE)
+      shinyjs::disable("remove_template", asis = TRUE)
     }
   })
 
@@ -46,12 +48,19 @@ shinyServer(function(input, output, session) {
     filename = function() { paste("inquiry_template", Sys.Date(), ".json", sep = "") },
     content = function(file) {
       # Convert to JSON
-      inquiry_template_json <- jsonlite::toJSON(reactiveValuesToList(submitted_templates()[[input$download_template]]), pretty = TRUE, auto_unbox = TRUE)
+      inquiry_template_json <- jsonlite::toJSON(reactiveValuesToList(submitted_templates()[[input$select_template]]), pretty = TRUE, auto_unbox = TRUE)
 
       # Download the JSON file
       write(inquiry_template_json, file)
     }
   )
+
+  observeEvent(input$remove_template, {
+    new_templates <- submitted_templates()
+
+    new_templates <- new_templates[!(input$select_template == names(new_templates))]
+    submitted_templates(new_templates)
+  })
 
   # Tab: Respond to Inquiry ----
   inquiry_template <- empty_template()

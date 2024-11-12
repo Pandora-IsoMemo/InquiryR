@@ -293,9 +293,9 @@ inquiryTemplateServer <- function(id, init_template) {
     observe({
       req(isTRUE(save_template()))
       logDebug("%s: Save Inquiry Template.", id)
-      all_templates <- submitted_templates()
-      all_templates[[init_template$title]] <- init_template
-      submitted_templates(all_templates)
+      new_templates <- submitted_templates()
+      new_templates[[init_template$title]] <- init_template
+      submitted_templates(new_templates)
       # notify user that the template was submitted
       showNotification("An Inquiry Template has been saved", duration = 5)
       save_template(FALSE)

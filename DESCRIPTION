@@ -18,6 +18,7 @@ Imports:
   futile.logger,
   jsonlite,
   shiny,
+  shinyjs,
   shinysurveys,
   shinyTools (>= 24.11.1),
   sodium

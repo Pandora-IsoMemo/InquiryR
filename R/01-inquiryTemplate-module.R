@@ -140,12 +140,13 @@ inquiryTemplateServer <- function(id, init_template) {
                 ignoreInit = TRUE,
                 ignoreNULL = FALSE)
 
-    new_questions <- addQuestionServer("new_question", reactive(init_template$questions))
+    new_question <- addQuestionServer("new_question", reactive(init_template$questions))
 
     observe({
       logDebug("%s: Add new question.", id)
-      init_template$questions <- new_questions()
-    }) %>% bindEvent(new_questions())
+      init_template$questions <- rbind(init_template$questions, new_question()) %>%
+        distinct()
+    }) %>% bindEvent(new_question())
 
     # enable/disable 'Remove' button
     observe({

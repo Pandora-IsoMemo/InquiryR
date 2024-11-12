@@ -22,6 +22,7 @@ tagList(
           actionButton("remove_template", "Remove"),
         ),
         mainPanel(
+          shinyjs::useShinyjs(),  # Set up shinyjs,
           inquiryTemplateUI("inquiry_template"),
         ),
       )

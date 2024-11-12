@@ -1,31 +1,11 @@
 shinyServer(function(input, output, session) {
   # Tab: Create Inquiry ----
-  inquiry_template <- reactiveValues(
-    title = "Survey",
-    description = "Description of the survey.",
-    questions = data.frame(
-      question = character(),
-      option = character(),
-      input_type = character(),
-      input_id = character(),
-      dependence = character(),
-      dependence_value = character(),
-      required = logical()
-    )
-  )
+  loaded_template <- empty_template()
 
-  observe({
-    if (nrow(inquiry_template$questions) > 0) {
-      shinyjs::enable("downloadTemplate", asis = TRUE)
-    } else {
-      shinyjs::disable("downloadTemplate", asis = TRUE)
-    }
-  })
-
-  observeEvent(input$create_df, {
-    inquiry_template$title <- "Example Survey"
-    inquiry_template$description <- "This survey was generated from an example DataFrame."
-    inquiry_template$questions <- data.frame(
+  observeEvent(input$load_example, {
+    loaded_template$title <- "Example Survey"
+    loaded_template$description <- "This survey was generated from an example DataFrame."
+    loaded_template$questions <- data.frame(
       question = c("What is your name?", "How do you feel today?"),
       option = c("", ""),
       input_type = c("text", "text"),
@@ -38,24 +18,62 @@ shinyServer(function(input, output, session) {
     showNotification("An Inquiry Template has been created.", duration = 5)
   })
 
+  submitted_templates <- inquiryTemplateServer("inquiry_template", init_template = loaded_template)
+
+  observe({
+    # update download/render choices
+    if (length(submitted_templates()) > 0) {
+      choices <- names(submitted_templates())
+    } else {
+      choices <- c("No inquiry available ..." = "")
+    }
+
+    updateSelectInput(session, "download_template", choices = choices)
+    updateSelectInput(session, "render_template", choices = choices)
+  })
+
   # download template as json
-  output$downloadTemplate <- downloadHandler(
+  observe({
+    # enable/disable download button
+    if (!is.null(input$download_template) && input$download_template != "") {
+      shinyjs::enable("download_template_execute", asis = TRUE)
+    } else {
+      shinyjs::disable("download_template_execute", asis = TRUE)
+    }
+  })
+
+  output$download_template_execute <- downloadHandler(
     filename = function() { paste("inquiry_template", Sys.Date(), ".json", sep = "") },
     content = function(file) {
       # Convert to JSON
-      inquiry_template_json <- jsonlite::toJSON(reactiveValuesToList(inquiry_template), pretty = TRUE, auto_unbox = TRUE)
+      inquiry_template_json <- jsonlite::toJSON(reactiveValuesToList(submitted_templates()[[input$download_template]]), pretty = TRUE, auto_unbox = TRUE)
 
       # Download the JSON file
       write(inquiry_template_json, file)
     }
   )
 
-  inquiryTemplateServer("inquiry_template", inquiry_template = inquiry_template)
-
   # Tab: Respond to Inquiry ----
+  inquiry_template <- empty_template()
+
+  observe({
+    # enable/disable render button
+    if (!is.null(input$render_template) && input$render_template != "") {
+      shinyjs::enable("render_template_execute", asis = TRUE)
+    } else {
+      shinyjs::disable("render_template_execute", asis = TRUE)
+    }
+  })
+
+  observeEvent(input$render_template_execute, {
+    entries <- names(submitted_templates()[[input$render_template]])
+    for (entry in entries) {
+      inquiry_template[[entry]] <- submitted_templates()[[input$render_template]][[entry]]
+    }
+  })
+
   output$survey_ui <- renderUI({
     shiny::validate(need(nrow(inquiry_template$questions) > 0, "Please create or load an Inquiry template first."))
-    shiny::validate(need(input$renderSurvey, "Please load an Inquiry template first."))
 
     # Use a div container with a unique class to scope the survey styling
     div(class = "survey-container",
@@ -68,7 +86,6 @@ shinyServer(function(input, output, session) {
         )
     )
   })
-
 
   # Handle the Submit button action
   survey_data <- reactiveVal()
@@ -86,13 +103,13 @@ shinyServer(function(input, output, session) {
   # Add a download button to trigger the download handler
   observe({
     if (!is.null(survey_data())) {
-      shinyjs::enable("downloadData", asis = TRUE)
+      shinyjs::enable("download_response", asis = TRUE)
     } else {
-      shinyjs::disable("downloadData", asis = TRUE)
+      shinyjs::disable("download_response", asis = TRUE)
     }
   })
 
-  output$downloadData <- downloadHandler(
+  output$download_response <- downloadHandler(
     filename = function() { paste("survey_results", Sys.Date(), ".json", sep = "") },
     content = function(file) {
       # Convert to JSON

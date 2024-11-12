@@ -7,12 +7,12 @@
 \usage{
 inquiryTemplateUI(id)
 
-inquiryTemplateServer(id, inquiry_template)
+inquiryTemplateServer(id, init_template)
 }
 \arguments{
 \item{id}{The module id}
 
-\item{inquiry_template}{The inquiry template containing the questions data frame}
+\item{init_template}{An inquiry template containing the questions data frame}
 }
 \description{
 Inquiry Template UI

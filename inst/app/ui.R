@@ -15,9 +15,10 @@ tagList(
       sidebarLayout(
         sidebarPanel(
           width = 2,
-          actionButton("create_df", "Load Example"),
+          actionButton("load_example", "Load Example"),
           tags$br(), tags$br(),
-          downloadButton("downloadTemplate", "Download")
+          selectInput("download_template", "Download Template", choices = c("No inquiry available ..." = "")),
+          downloadButton("download_template_execute", "Download")
         ),
         mainPanel(
           inquiryTemplateUI("inquiry_template"),
@@ -29,9 +30,10 @@ tagList(
       sidebarLayout(
         sidebarPanel(
           width = 2,
-          actionButton("renderSurvey", "Load Template"),
+          selectInput("render_template", "Load Template", choices = c("No inquiry available ..." = "")),
+          actionButton("render_template_execute", "Load"),
           tags$br(), tags$br(),
-          downloadButton("downloadData", "Download")
+          downloadButton("download_response", "Download Response")
         ),
         mainPanel(
           uiOutput("survey_ui")

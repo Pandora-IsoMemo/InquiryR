@@ -6,22 +6,26 @@
 inquiryTemplateUI <- function(id) {
   ns <- NS(id)
   tagList(
-    tags$h3("Inquiry Template"),
     fluidRow(
+      column(3,
+             tags$h3("Inquiry Template")
+             ),
       column(
-        4,
+        3,
+        style = "margin-top: 1em;",
         textInput(
           ns("title"),
-          "Template Name",
-          placeholder = "Enter template name ...",
+          label = NULL,
+          placeholder = "Enter template name*",
           width = "100%"
         )
       ),
-      column(8,
+      column(6,
+             style = "margin-top: 1em;",
              textInput(
                ns("description"),
-               "Template Description",
-               placeholder = "Enter template description ...",
+               label = NULL,
+               placeholder = "Enter template description",
                width = "100%"
              )
              )
@@ -31,17 +35,17 @@ inquiryTemplateUI <- function(id) {
       10,
       textInput(
         ns("question"),
-        "Add a Question",
+        "Add a Question*",
         placeholder = "Enter question ...",
         width = "100%"
       ),
     ), column(
-      2, textInput(ns("question_id"), "Input ID", value = createRandomID())
+      2, textInput(ns("question_id"), "Input ID*", value = createRandomID())
     )),
     fluidRow(
       column(3, selectInput(
         ns("input_type"),
-        "Input Type",
+        "Input Type*",
         c(
           "Text" = "text",
           "Numeric" = "numeric",
@@ -121,6 +125,9 @@ inquiryTemplateUI <- function(id) {
       )
     ),
     tags$br(),
+    actionButton(ns("submit"), "Submit Inquiry Template"),
+    tags$br(),
+    tags$br(),
     tableOutput(ns("questions_table"))
   )
 }
@@ -128,52 +135,54 @@ inquiryTemplateUI <- function(id) {
 #' Inquiry Template Server
 #'
 #' @param id The module id
-#' @param inquiry_template The inquiry template containing the questions data frame
+#' @param init_template An inquiry template containing the questions data frame
 #'
 #' @export
-inquiryTemplateServer <- function(id, inquiry_template) {
+inquiryTemplateServer <- function(id, init_template) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    submitted_templates <- reactiveVal(list())
 
     # observe Inquiry name and description ----
     observe({
       logDebug("%s: Update 'input$title' value.", id)
-      updateTextInput(session, "title", value = inquiry_template$title)
-    }) %>% bindEvent(inquiry_template$title)
+      updateTextInput(session, "title", value = init_template$title)
+    }) %>% bindEvent(init_template$title)
 
     observe({
       logDebug("%s: Update 'input$description' value.", id)
-      updateTextInput(session, "description", value = inquiry_template$description)
-    }) %>% bindEvent(inquiry_template$description)
+      updateTextInput(session, "description", value = init_template$description)
+    }) %>% bindEvent(init_template$description)
 
     observe({
-      logDebug("%s: Set 'inquiry_template$title' value.", id)
-      inquiry_template$title <- input$title
+      logDebug("%s: Set 'init_template$title' value.", id)
+      init_template$title <- input$title
     }) %>% bindEvent(input$title)
 
     observe({
-      logDebug("%s: Set 'inquiry_template$description' value.", id)
-      inquiry_template$description <- input$description
+      logDebug("%s: Set 'init_template$description' value.", id)
+      init_template$description <- input$description
     }) %>% bindEvent(input$description)
 
 
     # observe questions ----
     output$questions_table <- renderTable({
       shiny::validate(need(
-        nrow(inquiry_template$questions) > 0,
+        nrow(init_template$questions) > 0,
         "Please create an Inquiry template first."
       ))
-      inquiry_template$questions
+      init_template$questions
     })
 
     observe({
       logDebug("%s: Update 'input$remove_questions' choices.", id)
       # update input$remove_questions
-      choices <- inquiry_template$questions$input_id
-      names(choices) <- inquiry_template$questions$question
+      choices <- init_template$questions$input_id
+      names(choices) <- init_template$questions$question
       updateSelectInput(session, "remove_questions", choices = choices)
     }) %>%
-      bindEvent(inquiry_template$questions,
+      bindEvent(init_template$questions,
                 ignoreInit = TRUE,
                 ignoreNULL = FALSE)
 
@@ -190,7 +199,7 @@ inquiryTemplateServer <- function(id, inquiry_template) {
 
     observe({
       logDebug("%s: Add new question.", id)
-      questions_df <- inquiry_template$questions
+      questions_df <- init_template$questions
 
       if (input$question_id %in% questions_df$input_id) {
         showNotification("Question ID already exists. Please enter a different ID.",
@@ -212,7 +221,7 @@ inquiryTemplateServer <- function(id, inquiry_template) {
       questions_df <- rbind(questions_df, new_question)
 
       # update the questions data frame
-      inquiry_template$questions <- questions_df
+      init_template$questions <- questions_df
 
       # clean inputs
       updateTextInput(session, "question", value = "")
@@ -233,13 +242,87 @@ inquiryTemplateServer <- function(id, inquiry_template) {
     # remove selected questions
     observe({
       logDebug("%s: Remove selected questions.", id)
-      questions_df <- inquiry_template$questions
+      questions_df <- init_template$questions
       questions_df <- questions_df[!questions_df$input_id %in% input$remove_questions, ]
-      inquiry_template$questions <- questions_df
+      init_template$questions <- questions_df
     }) %>%
       bindEvent(input$remove)
 
+    # enable/disable 'Submit' button
+    observe({
+      logDebug("%s: Enable/Disable 'Submit' button.", id)
+      if (!is.null(init_template$title) && init_template$title != "" && nrow(init_template$questions) > 0) {
+        shinyjs::enable(ns("submit"), asis = TRUE)
+      } else {
+        shinyjs::disable(ns("submit"), asis = TRUE)
+      }
+    })
+
+    # submit the inquiry template
+    save_template <- reactiveVal(FALSE)
+
+    observe({
+      logDebug("%s: Submit Inquiry Template.", id)
+
+      # check if name already exists
+      if (init_template$title %in% names(submitted_templates())) {
+        # ask the user if they want to overwrite the template
+        showModal(modalDialog(
+          title = "Overwrite Template?",
+          "The template already exists. Do you want to overwrite it?",
+          footer = tagList(
+            modalButton("Cancel"),
+            actionButton(ns("confirm_overwrite"), label = "Overwrite")
+          )
+        ))
+
+        observe({
+          logDebug("%s: Confirm Overwrite.", id)
+          # Save new value and close the modal
+          save_template(TRUE)
+          removeModal()
+        }) %>%
+          bindEvent(input$confirm_overwrite)
+      } else {
+        # else save the template
+        save_template(TRUE)
+      }
+    }) %>%
+      bindEvent(input$submit)
+
+    observe({
+      req(isTRUE(save_template()))
+      logDebug("%s: Save Inquiry Template.", id)
+      all_templates <- submitted_templates()
+      all_templates[[init_template$title]] <- init_template
+      submitted_templates(all_templates)
+      # notify user that the template was submitted
+      showNotification("An Inquiry Template has been saved", duration = 5)
+      save_template(FALSE)
+    }) %>%
+      bindEvent(save_template())
+
+    return(submitted_templates)
   })
+}
+
+#' Empty Template
+#'
+#' @export
+empty_template <- function() {
+  reactiveValues(
+    title = "Survey",
+    description = "Description of the survey.",
+    questions = data.frame(
+      question = character(),
+      option = character(),
+      input_type = character(),
+      input_id = character(),
+      dependence = character(),
+      dependence_value = character(),
+      required = logical()
+    )
+  )
 }
 
 createRandomID <- function(length = 10) {

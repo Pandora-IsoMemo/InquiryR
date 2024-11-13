@@ -7,9 +7,6 @@ inquiryTemplateUI <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      column(3,
-             tags$h3("Inquiry Template")
-             ),
       column(
         3,
         style = "margin-top: 1em;",
@@ -20,7 +17,7 @@ inquiryTemplateUI <- function(id) {
           width = "100%"
         )
       ),
-      column(6,
+      column(9,
              style = "margin-top: 1em;",
              textInput(
                ns("description"),
@@ -38,7 +35,7 @@ inquiryTemplateUI <- function(id) {
     tags$br(),
     fluidRow(
       column(10,
-             htmlOutput(ns("questions_header")),
+             #htmlOutput(ns("questions_header")), # HACK: <- avoid additional display of texts because style is overwritten
              tableOutput(ns("questions_table"))),
       column(
         2,
@@ -90,19 +87,20 @@ inquiryTemplateServer <- function(id, init_template) {
 
 
     # observe title ----
-    output$questions_header <- renderUI({
-      shiny::validate(need(
-        !is.null(init_template$title) && init_template$title != "",
-        "Please set a title ..."
-      ))
-
-      HTML(paste0(
-        "<h3>", init_template$title, "</h3>",
-        "<h4>", init_template$description, "</h4>",
-        "<br>",
-        "<p>Questions dataframe:</p>"
-      ))
-    })
+    # HACK: <- avoid additional display of texts because style is overwritten
+    # output$questions_header <- renderUI({
+    #   shiny::validate(need(
+    #     !is.null(init_template$title) && init_template$title != "",
+    #     "Please set a title ..."
+    #   ))
+    #
+    #   HTML(paste0(
+    #     "<h3>", init_template$title, "</h3>",
+    #     "<h4>", init_template$description, "</h4>",
+    #     "<br>",
+    #     "<p>Questions dataframe:</p>"
+    #   ))
+    # })
 
     # observe questions ----
     output$questions_table <- renderTable({

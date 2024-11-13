@@ -89,9 +89,16 @@ shinyServer(function(input, output, session) {
           df = inquiry_template$questions,
           survey_title = inquiry_template$title,
           survey_description = inquiry_template$description,
-          theme = NULL
+          #theme = NULL # <- BUG: dependencies do not work if theme is NULL
+          theme = rgb(0, 0, 0, 0) # <- HACK: use transparent theme to avoid theme issues
         )
     )
+  })
+
+  observe({
+    req(nrow(inquiry_template$questions) > 0)
+
+    shinysurveys::renderSurvey()
   })
 
   # Handle the Submit button action

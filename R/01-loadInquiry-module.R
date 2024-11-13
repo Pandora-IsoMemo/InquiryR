@@ -96,6 +96,25 @@ loadInquiryServer <- function(id, submitted_templates) {
   })
 }
 
+#' Empty Template
+#'
+#' @export
+empty_template <- function() {
+  reactiveValues(
+    title = "Survey",
+    description = "Description of the survey.",
+    questions = data.frame(
+      question = character(),
+      option = character(),
+      input_type = character(),
+      input_id = character(),
+      dependence = character(),
+      dependence_value = character(),
+      required = logical()
+    )
+  )
+}
+
 #' Check if object is encrypted
 #'
 #' @param obj The object to check

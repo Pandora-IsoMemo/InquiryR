@@ -33,44 +33,7 @@ inquiryTemplateUI <- function(id) {
     tags$br(),
     addQuestionUI(ns("new_question")),
     tags$br(),
-    fluidRow(
-      column(
-        5,
-        pickerInput(
-          ns("remove_questions"),
-          "Remove Question(s)",
-          choices = c("Please add questions first ..." = ""),
-          multiple = TRUE,
-          options = list(
-            `actions-box` = TRUE,
-            `selected-text-format` = "count > 3",
-            `count-selected-text` = "{0} options selected"
-          ),
-          width = "100%"
-        )
-      ),
-      column(
-        5,
-        pickerInput(
-          ns("remove_options"),
-          "Remove Option(s)",
-          choices = c("Please select question(s) first ..." = ""),
-          multiple = TRUE,
-          options = list(
-            `actions-box` = TRUE,
-            `selected-text-format` = "count > 3",
-            `count-selected-text` = "{0} options selected"
-          ),
-          width = "100%"
-        )
-      ),
-      column(
-        2,
-        style = "margin-top: 1.5em;",
-        actionButton(ns("remove"), "Remove", width = "100%")
-      )
-    ),
-    # add option to remove option
+    removeQuestionUI(ns("remove_questions")),
     tags$hr(),
     tags$br(),
     fluidRow(
@@ -150,19 +113,6 @@ inquiryTemplateServer <- function(id, init_template) {
       init_template$questions
     }, width = "100%")
 
-    observe({
-      logDebug("%s: Update 'input$remove_questions' choices.", id)
-      # update input$remove_questions
-      choices_df <- init_template$questions[, c("input_id", "question")] %>%
-        distinct()
-      choices <- choices_df$input_id
-      names(choices) <- choices_df$question
-      updatePickerInput(session, "remove_questions", choices = choices)
-    }) %>%
-      bindEvent(init_template$questions,
-                ignoreInit = TRUE,
-                ignoreNULL = FALSE)
-
     new_question <- addQuestionServer("new_question", reactive(init_template$questions))
 
     observe({
@@ -171,31 +121,12 @@ inquiryTemplateServer <- function(id, init_template) {
         distinct()
     }) %>% bindEvent(new_question())
 
-    # enable/disable 'Remove' button
-    observe({
-      logDebug("%s: Enable/Disable 'Remove' button.", id)
-      if (length(input$remove_questions) > 0) {
-        choices <- init_template$questions$option[init_template$questions$input_id %in% input$remove_questions] %>%
-          unique()
-        updatePickerInput(session, "remove_options", choices = choices, selected = choices)
-        shinyjs::enable(ns("remove"), asis = TRUE)
-      } else {
-        updatePickerInput(session, "remove_options", choices = c("Please select question(s) first ..." = ""))
-        shinyjs::disable(ns("remove"), asis = TRUE)
-      }
-    })
+    new_questions <- removeQuestionServer("remove_questions", questions = reactive(init_template$questions))
 
-    # remove selected questions
     observe({
       logDebug("%s: Remove selected questions.", id)
-      questions_df <- init_template$questions
-      remove_index <- (questions_df$input_id %in% input$remove_questions) &
-        (questions_df$option %in% input$remove_options)
-
-      questions_df <- questions_df[!remove_index, ]
-      init_template$questions <- questions_df
-    }) %>%
-      bindEvent(input$remove)
+      init_template$questions <- new_questions()
+    }) %>% bindEvent(new_questions())
 
     # show/hide password
     observeShowPassword(input, id_password = ns("password"))
@@ -263,7 +194,7 @@ inquiryTemplateServer <- function(id, init_template) {
         }
       }
 
-      # reset trigger
+      # reset the trigger variable
       save_template(FALSE)
 
       req(new_template)
@@ -295,23 +226,4 @@ observeShowPassword <- function(input, id_password, input_show = "show_password"
       shinyjs::runjs(sprintf("$('#%s').attr('type', 'password');", id_password))
     }
   })
-}
-
-#' Empty Template
-#'
-#' @export
-empty_template <- function() {
-  reactiveValues(
-    title = "Survey",
-    description = "Description of the survey.",
-    questions = data.frame(
-      question = character(),
-      option = character(),
-      input_type = character(),
-      input_id = character(),
-      dependence = character(),
-      dependence_value = character(),
-      required = logical()
-    )
-  )
 }

@@ -1,46 +1,12 @@
 shinyServer(function(input, output, session) {
   # Tab: Create Inquiry ----
-  loaded_template <- empty_template()
-
-  imported_template <- DataTools::importServer(
-    "import_template",
-    title = "",
-    ckanFileTypes = "json",
-    importType = "list",
-    fileExtension = "json",
-    options = DataTools::importOptions(rPackageName = "InquiryR")
-
-  )
-
-  observeEvent(imported_template(), {
-    req(length(imported_template()) > 0)
-
-    req(isTRUE(validateImport(imported_template()[[1]])))
-
-    # missingEntries <- setdiff(c("title", "description", "questions"),
-    #                           names(imported_template()[[1]]))
-    # if (length(missingEntries) > 0) {
-    #   showNotification(
-    #     paste(
-    #       "The imported template is missing the following entries: ",
-    #       paste(missingEntries, collapse = ", ")
-    #     ),
-    #     duration = 5
-    #   )
-    # }
-
-    loaded_template$title <- imported_template()[[1]]$title
-    loaded_template$description <- imported_template()[[1]]$description
-    loaded_template$questions <- imported_template()[[1]]$questions %>% sanitizeQuestions()
-    # notify user that the data frame was created
-    showNotification("An Inquiry Template has been loaded.", duration = 5)
-  })
+  inquiry_template <- empty_template()
 
   observeEvent(input$load_example, {
-    loaded_template$title <- "Example Survey"
-    loaded_template$description <- "This survey was generated from an example DataFrame."
+    inquiry_template$title <- "Example Survey"
+    inquiry_template$description <- "This survey was generated from an example DataFrame."
 
-    loaded_template$questions <- file.path("data", "example_questions.csv") %>%
+    inquiry_template$questions <- file.path("data", "example_questions.csv") %>%
       read.csv() %>%
       shinyTools::shinyTryCatch(errorTitle = "Reading example file failed", alertStyle = "shinyalert")
 
@@ -48,7 +14,15 @@ shinyServer(function(input, output, session) {
     showNotification("An Inquiry Template has been loaded.", duration = 5)
   })
 
-  submitted_templates <- inquiryTemplateServer("inquiry_template", init_template = loaded_template)
+  submitted_templates <- inquiryTemplateServer("inquiry_template", init_template = inquiry_template)
+
+  loaded_template <- loadInquiryServer("load_template", submitted_templates)
+
+  observeEvent(loaded_template$title, {
+    inquiry_template$title <- loaded_template$title
+    inquiry_template$description <- loaded_template$description
+    inquiry_template$questions <- loaded_template$questions
+  })
 
   observe({
     # update download/render choices
@@ -114,13 +88,13 @@ shinyServer(function(input, output, session) {
   })
 
   # Tab: Respond to Inquiry ----
-  inquiry_template <- loadInquiryServer("load_template", submitted_templates)
+  loaded_inquiry <- loadInquiryServer("load_inquiry", submitted_templates)
 
   # Initialize a reactive flag
   survey_ui_created <- reactiveVal(FALSE)
   output$survey_ui <- renderUI({
     shiny::validate(need(
-      nrow(inquiry_template$questions) > 0,
+      nrow(loaded_inquiry$questions) > 0,
       "Please load an inquiry first."
     ))
 
@@ -130,9 +104,9 @@ shinyServer(function(input, output, session) {
       class = "survey-container",
       # Survey output
       shinysurveys::surveyOutput(
-        df = inquiry_template$questions,
-        survey_title = inquiry_template$title,
-        survey_description = inquiry_template$description,
+        df = loaded_inquiry$questions %>% sanitizeQuestions(),
+        survey_title = loaded_inquiry$title,
+        survey_description = loaded_inquiry$description,
         #theme = NULL # <- BUG: dependencies do not work if theme is NULL
         theme = rgb(0, 0, 0, 0) # <- HACK: use transparent theme to avoid theme issues, because surveyOutput overwrites the style
       ) %>%
@@ -151,8 +125,8 @@ shinyServer(function(input, output, session) {
   observeEvent(input$submit, {
     # Collect the responses from input list
     survey_data(data.frame(
-      input_id = inquiry_template$questions$input_id,
-      response = sapply(inquiry_template$questions$input_id, function(x)
+      input_id = loaded_inquiry$questions$input_id,
+      response = sapply(loaded_inquiry$questions$input_id, function(x)
         input[[x]])
     ))
 

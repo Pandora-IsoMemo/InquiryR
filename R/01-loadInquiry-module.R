@@ -9,7 +9,7 @@ loadInquiryUI <- function(id) {
     DataTools::importUI(ns("import_template"), label = "Import"),
     selectInput(
       ns("select_template"),
-      "Select Inquiry",
+      "Load Inquiry",
       choices = c("No inquiry available ..." = "")
     ),
     passwordInput(ns("password"), "Password"),
@@ -43,16 +43,15 @@ loadInquiryServer <- function(id, submitted_templates) {
     observeEvent(imported_template(), {
       req(length(imported_template()) > 0)
 
-      req(isTRUE(validateImport(imported_template()[[1]])))
+      import_tmp <- imported_template()[[1]]
 
-      new_template <- setNames(list(
-        list(
-          title = imported_template()[[1]]$title,
-          description = imported_template()[[1]]$description,
-          questions = imported_template()[[1]]$questions %>% sanitizeQuestions()
-        )
-      ), imported_template()[[1]]$title)
+      if (!is_encrypted(import_tmp)) {
+        new_template <- setNames(list(import_tmp), import_tmp$title)
+      } else {
+        new_template <- setNames(list(import_tmp), "encrypted inquiry")
+      }
 
+      # concatenate the new template with the old ones
       old_template_list <- submitted_templates()
       new_template_list <- updateListNamesIfDuplicate(new_template, old_template_list)
 
@@ -131,8 +130,8 @@ loadInquiryServer <- function(id, submitted_templates) {
 #' @export
 empty_template <- function() {
   reactiveValues(
-    title = "Survey",
-    description = "Description of the survey.",
+    title = "",
+    description = "",
     questions = data.frame(
       question = character(),
       option = character(),

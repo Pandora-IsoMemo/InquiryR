@@ -11,8 +11,10 @@ tagList(
     tabPanel(title = "Create Inquiry", sidebarLayout(
       sidebarPanel(
         width = 2,
-        DataTools::importUI("import_template", label = "Import"),
         actionButton("load_example", "Example"),
+        tags$br(),
+        tags$br(),
+        loadInquiryUI("load_template"),
         tags$br(),
         tags$br(),
         tags$br(),
@@ -33,7 +35,7 @@ tagList(
     tabPanel(title = "Respond to Inquiry", sidebarLayout(
       sidebarPanel(
         width = 2,
-        loadInquiryUI("load_template"),
+        loadInquiryUI("load_inquiry"),
         tags$br(),
         tags$br(),
         downloadButton("download_response", "Download Response")

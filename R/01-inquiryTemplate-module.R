@@ -35,7 +35,7 @@ inquiryTemplateUI <- function(id) {
     tags$br(),
     fluidRow(
       column(10,
-             #htmlOutput(ns("questions_header")), # HACK: <- avoid additional display of texts because style is overwritten
+             #htmlOutput(ns("questions_header")), # HACK: <- avoid additional display of texts because surveyOutput overwrites the style
              tableOutput(ns("questions_table"))),
       column(
         2,
@@ -87,7 +87,7 @@ inquiryTemplateServer <- function(id, init_template) {
 
 
     # observe title ----
-    # HACK: <- avoid additional display of texts because style is overwritten
+    # HACK: <- avoid additional display of texts because surveyOutput overwrites the style
     # output$questions_header <- renderUI({
     #   shiny::validate(need(
     #     !is.null(init_template$title) && init_template$title != "",

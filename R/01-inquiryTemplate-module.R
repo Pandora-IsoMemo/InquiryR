@@ -17,15 +17,16 @@ inquiryTemplateUI <- function(id) {
           width = "100%"
         )
       ),
-      column(9,
-             style = "margin-top: 1em;",
-             textInput(
-               ns("description"),
-               label = NULL,
-               placeholder = "Enter template description",
-               width = "100%"
-             )
-             )
+      column(
+        9,
+        style = "margin-top: 1em;",
+        textInput(
+          ns("description"),
+          label = NULL,
+          placeholder = "Enter template description",
+          width = "100%"
+        )
+      )
     ),
     tags$br(),
     addQuestionUI(ns("new_question")),
@@ -34,9 +35,10 @@ inquiryTemplateUI <- function(id) {
     tags$hr(),
     tags$br(),
     fluidRow(
-      column(10,
-             #htmlOutput(ns("questions_header")), # HACK: <- avoid additional display of texts because surveyOutput overwrites the style
-             tableOutput(ns("questions_table"))),
+      column(10, #htmlOutput(ns("questions_header")), # HACK: <- avoid additional display of texts because surveyOutput overwrites the style
+             tableOutput(ns(
+               "questions_table"
+             ))),
       column(
         2,
         actionButton(ns("submit"), "Submit Template", width = "100%"),
@@ -66,21 +68,25 @@ inquiryTemplateServer <- function(id, init_template) {
 
     # observe Inquiry name and description ----
     observe({
+      req(!identical(init_template$title, input$title))
       logDebug("%s: Update 'input$title' value.", id)
       updateTextInput(session, "title", value = init_template$title)
     }) %>% bindEvent(init_template$title)
 
     observe({
+      req(!identical(init_template$description, input$description))
       logDebug("%s: Update 'input$description' value.", id)
       updateTextInput(session, "description", value = init_template$description)
     }) %>% bindEvent(init_template$description)
 
     observe({
+      req(!identical(init_template$title, input$title))
       logDebug("%s: Set 'init_template$title' value.", id)
       init_template$title <- input$title
     }) %>% bindEvent(input$title)
 
     observe({
+      req(!identical(init_template$description, input$description))
       logDebug("%s: Set 'init_template$description' value.", id)
       init_template$description <- input$description
     }) %>% bindEvent(input$description)
@@ -116,7 +122,8 @@ inquiryTemplateServer <- function(id, init_template) {
     observe({
       logDebug("%s: Add new question.", id)
       init_template$questions <- rbind(init_template$questions, new_question()) %>%
-        distinct()
+        distinct() %>%
+        shinyTools::shinyTryCatch(errorTitle = "Adding question failed", alertStyle = "shinyalert")
     }) %>% bindEvent(new_question())
 
     new_questions <- removeQuestionServer("remove_questions", questions = reactive(init_template$questions))
@@ -132,7 +139,8 @@ inquiryTemplateServer <- function(id, init_template) {
     # enable/disable 'Submit' button
     observe({
       logDebug("%s: Enable/Disable 'Submit' button.", id)
-      if (!is.null(init_template$title) && init_template$title != "" && nrow(init_template$questions) > 0) {
+      if (!is.null(init_template$title) &&
+          init_template$title != "" && nrow(init_template$questions) > 0) {
         shinyjs::enable(ns("submit"), asis = TRUE)
       } else {
         shinyjs::disable(ns("submit"), asis = TRUE)
@@ -148,14 +156,16 @@ inquiryTemplateServer <- function(id, init_template) {
       # check if name already exists
       if (init_template$title %in% names(submitted_templates())) {
         # ask the user if they want to overwrite the template
-        showModal(modalDialog(
-          title = "Overwrite Template?",
-          "The template already exists. Do you want to overwrite it?",
-          footer = tagList(
-            modalButton("Cancel"),
-            actionButton(ns("confirm_overwrite"), label = "Overwrite")
+        showModal(
+          modalDialog(
+            title = "Overwrite Template?",
+            "The template already exists. Do you want to overwrite it?",
+            footer = tagList(
+              modalButton("Cancel"),
+              actionButton(ns("confirm_overwrite"), label = "Overwrite")
+            )
           )
-        ))
+        )
 
         observe({
           logDebug("%s: Confirm Overwrite.", id)
@@ -182,7 +192,8 @@ inquiryTemplateServer <- function(id, init_template) {
 
       if (isTRUE(input$add_password)) {
         if (is.null(input$password) || input$password == "") {
-          showNotification("Please enter a password to encrypt the template.", duration = 5)
+          showNotification("Please enter a password to encrypt the template.",
+                           duration = 5)
           new_template <- NULL
         } else{
           # encrypt template using cyphr

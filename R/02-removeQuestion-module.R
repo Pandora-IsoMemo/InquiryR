@@ -1,45 +1,39 @@
 removeQuestionUI <- function(id) {
   ns <- NS(id)
 
-  tagList(
-    fluidRow(
-      column(
-        5,
-        pickerInput(
-          ns("remove_questions"),
-          "Remove Question(s)",
-          choices = c("Please add questions first ..." = ""),
-          multiple = TRUE,
-          options = list(
-            `actions-box` = TRUE,
-            `selected-text-format` = "count > 3",
-            `count-selected-text` = "{0} options selected"
-          ),
-          width = "100%"
-        )
-      ),
-      column(
-        5,
-        pickerInput(
-          ns("remove_options"),
-          "Remove Option(s)",
-          choices = c("Please select question(s) first ..." = ""),
-          multiple = TRUE,
-          options = list(
-            `actions-box` = TRUE,
-            `selected-text-format` = "count > 3",
-            `count-selected-text` = "{0} options selected"
-          ),
-          width = "100%"
-        )
-      ),
-      column(
-        2,
-        style = "margin-top: 1.5em;",
-        actionButton(ns("remove"), "Remove", width = "100%")
+  tagList(fluidRow(
+    column(
+      5,
+      pickerInput(
+        ns("remove_questions"),
+        "Remove Question(s)",
+        choices = c("Please add questions first ..." = ""),
+        multiple = TRUE,
+        options = list(
+          `actions-box` = TRUE,
+          `selected-text-format` = "count > 3",
+          `count-selected-text` = "{0} options selected"
+        ),
+        width = "100%"
       )
-    )
-  )
+    ),
+    column(
+      5,
+      pickerInput(
+        ns("remove_options"),
+        "Remove Option(s)",
+        choices = c("Please select question(s) first ..." = ""),
+        multiple = TRUE,
+        options = list(
+          `actions-box` = TRUE,
+          `selected-text-format` = "count > 3",
+          `count-selected-text` = "{0} options selected"
+        ),
+        width = "100%"
+      )
+    ),
+    column(2, style = "margin-top: 1.5em;", actionButton(ns("remove"), "Remove", width = "100%"))
+  ))
 }
 
 removeQuestionServer <- function(id, questions) {
@@ -66,10 +60,17 @@ removeQuestionServer <- function(id, questions) {
       if (length(input$remove_questions) > 0) {
         choices <- questions()$option[questions()$input_id %in% input$remove_questions] %>%
           unique()
-        updatePickerInput(session, "remove_options", choices = choices, selected = choices)
+        updatePickerInput(session,
+                          "remove_options",
+                          choices = choices,
+                          selected = choices)
         shinyjs::enable(ns("remove"), asis = TRUE)
       } else {
-        updatePickerInput(session, "remove_options", choices = c("Please select question(s) first ..." = ""))
+        updatePickerInput(
+          session,
+          "remove_options",
+          choices = c("Please select question(s) first ..." = "")
+        )
         shinyjs::disable(ns("remove"), asis = TRUE)
       }
     })

@@ -111,11 +111,7 @@ addQuestionServer <- function(id, questions) {
       choices <- choices_df$input_id
       names(choices) <- choices_df$question
 
-      updateSelectInput(
-        session,
-        "dependence_questions",
-        choices = choices
-      )
+      updateSelectInput(session, "dependence_questions", choices = choices)
     }) %>%
       bindEvent(questions(),
                 ignoreInit = TRUE,
@@ -165,7 +161,8 @@ addQuestionServer <- function(id, questions) {
       bindEvent(input$input_type)
 
     observe({
-      logDebug("%s: Enable/Disable 'input$option' if duplicated 'input_id'.", id)
+      logDebug("%s: Enable/Disable 'input$option' if duplicated 'input_id'.",
+               id)
 
       if (input$input_type == "matrix" &&
           input$input_id %in% questions()$input_id) {
@@ -183,7 +180,8 @@ addQuestionServer <- function(id, questions) {
     })
 
     observe({
-      logDebug("%s: Enable/Disable 'input$question' if duplicated 'input_id'.", id)
+      logDebug("%s: Enable/Disable 'input$question' if duplicated 'input_id'.",
+               id)
 
       # this allows to add options to an existing question
       if (input$input_type %in% c("mc", "select") &&
@@ -218,7 +216,8 @@ addQuestionServer <- function(id, questions) {
           dependence = ifelse(input$dependence, input$dependence_questions, NA),
           dependence_value = ifelse(input$dependence, input$dependence_value, NA),
           required = input$required
-        )
+        ) %>%
+        shinyTools::shinyTryCatch(errorTitle = "Creating question failed", alertStyle = "shinyalert")
 
       new_question(new_rows)
 

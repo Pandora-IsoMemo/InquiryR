@@ -1,6 +1,4 @@
 library(shiny)
-library(shinysurveys)
-library(jsonlite)
 library(InquiryR)
 
 tagList(
@@ -10,37 +8,38 @@ tagList(
     position = "fixed-top",
     collapsible = TRUE,
     id = "tab",
-    tabPanel(
-      title = "Create Inquiry",
-      sidebarLayout(
-        sidebarPanel(
-          width = 2,
-          actionButton("load_example", "Load Example"),
-          tags$br(), tags$br(),
-          selectInput("select_template", "Select Template", choices = c("No inquiry available ..." = "")),
-          downloadButton("download_template_execute", "Download"),
-          actionButton("remove_template", "Remove"),
+    tabPanel(title = "Create Inquiry", sidebarLayout(
+      sidebarPanel(
+        width = 2,
+        DataTools::importUI("import_template", label = "Import"),
+        actionButton("load_example", "Example"),
+        tags$br(),
+        tags$br(),
+        tags$br(),
+        selectInput(
+          "select_template",
+          "Select Template",
+          choices = c("No inquiry available ..." = "")
         ),
-        mainPanel(
-          shinyjs::useShinyjs(),  # Set up shinyjs,
-          inquiryTemplateUI("inquiry_template"),
-        ),
-      )
-    ),
-    tabPanel(
-      title = "Respond to Inquiry",
-      sidebarLayout(
-        sidebarPanel(
-          width = 2,
-          loadInquiryUI("load_template"),
-          tags$br(), tags$br(),
-          downloadButton("download_response", "Download Response")
-        ),
-        mainPanel(
-          uiOutput("survey_ui")
-        ),
-      )
-    )
+        downloadButton("download_template_execute", "Download"),
+        actionButton("remove_template", "Remove"),
+      ),
+      mainPanel(
+        shinyjs::useShinyjs(),
+        # Set up shinyjs,
+        inquiryTemplateUI("inquiry_template"),
+      ),
+    )),
+    tabPanel(title = "Respond to Inquiry", sidebarLayout(
+      sidebarPanel(
+        width = 2,
+        loadInquiryUI("load_template"),
+        tags$br(),
+        tags$br(),
+        downloadButton("download_response", "Download Response")
+      ),
+      mainPanel(uiOutput("survey_ui")),
+    ))
   ),
   shinyTools::headerButtonsUI(id = "header", help_link = "https://pandora-isomemo.github.io/InquiryR/"),
   tags$head(

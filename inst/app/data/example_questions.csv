@@ -1,0 +1,3 @@
+"question","option","input_type","input_id","dependence","dependence_value","required"
+"What is your name?","","text","name",NA,NA,TRUE
+"How do you feel today?","","text","mood",NA,NA,FALSE

@@ -6,9 +6,10 @@
 loadInquiryUI <- function(id) {
   ns <- NS(id)
   tagList(
+    DataTools::importUI(ns("import_template"), label = "Import"),
     selectInput(
       ns("select_template"),
-      "Select Template",
+      "Select Inquiry",
       choices = c("No inquiry available ..." = "")
     ),
     passwordInput(ns("password"), "Password"),
@@ -28,6 +29,37 @@ loadInquiryServer <- function(id, submitted_templates) {
     ns <- session$ns
 
     inquiry_template <- empty_template()
+
+    imported_template <- DataTools::importServer(
+      "import_template",
+      title = "",
+      ckanFileTypes = "json",
+      importType = "list",
+      fileExtension = "json",
+      options = DataTools::importOptions(rPackageName = "InquiryR")
+
+    )
+
+    observeEvent(imported_template(), {
+      req(length(imported_template()) > 0)
+
+      req(isTRUE(validateImport(imported_template()[[1]])))
+
+      new_template <- setNames(list(
+        list(
+          title = imported_template()[[1]]$title,
+          description = imported_template()[[1]]$description,
+          questions = imported_template()[[1]]$questions %>% sanitizeQuestions()
+        )
+      ), imported_template()[[1]]$title)
+
+      old_template_list <- submitted_templates()
+      new_template_list <- updateListNamesIfDuplicate(new_template, old_template_list)
+
+      submitted_templates(c(old_template_list, new_template_list))
+      # notify user that the data frame was created
+      showNotification("An Inquiry Template has been loaded.", duration = 5)
+    })
 
     observe({
       logDebug("%s: Update select choices", id)
@@ -70,17 +102,15 @@ loadInquiryServer <- function(id, submitted_templates) {
       if (is_encrypted(selected_template)) {
         logDebug("%s: Try decrypting template", id)
 
-        # try to encrypt the object
+        # try to decrypt the object
         key <- key_sodium(hash(charToRaw(input$password)))
-        selected_template <- try({
-          decrypt_object(selected_template, key)
-        }, silent = TRUE)
+        selected_template <-
+          decrypt_object(selected_template, key) %>%
+          shinyTools::shinyTryCatch(errorTitle = "Decryption failed. Please check your password.", alertStyle = "shinyalert")
       }
 
       if (inherits(selected_template, "try-error")) {
         logWarn("%s: Decryption failed", id)
-        showNotification("Decryption failed. Please check your password.",
-                         duration = 5)
         selected_template <- NULL
       }
 
@@ -113,6 +143,27 @@ empty_template <- function() {
       required = logical()
     )
   )
+}
+
+#' Validate Import
+#'
+#' @param imported_template The imported template
+#'
+#' @export
+validateImport <- function(imported_template) {
+  missingEntries <- setdiff(c("title", "description", "questions"),
+                            names(imported_template))
+  if (length(missingEntries) > 0) {
+    showNotification(paste(
+      "The imported template is missing the following entries: ",
+      paste(missingEntries, collapse = ", ")
+    ),
+    duration = 5)
+
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
 }
 
 #' Check if object is encrypted

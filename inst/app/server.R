@@ -65,7 +65,9 @@ shinyServer(function(input, output, session) {
 
       if (is_encrypted(selected_template)) {
         # Write the encrypted template to a file
-        writeBin(selected_template, file)
+        zz <- file(file, "wb")
+        writeBin(selected_template, zz)
+        close(zz)
       } else {
         # Convert to JSON
         inquiry_template_json <- jsonlite::toJSON(

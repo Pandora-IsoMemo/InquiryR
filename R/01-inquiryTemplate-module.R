@@ -36,7 +36,7 @@ inquiryTemplateUI <- function(id) {
     tags$br(),
     fluidRow(
       column(10, #htmlOutput(ns("questions_header")), # HACK: <- avoid additional display of texts because surveyOutput overwrites the style
-             tableOutput(ns(
+             DTOutput(ns(
                "questions_table"
              ))),
       column(
@@ -92,7 +92,7 @@ inquiryTemplateServer <- function(id, init_template) {
     }) %>% bindEvent(input$description)
 
 
-    # observe title ----
+    # observe header
     # HACK: <- avoid additional display of texts because surveyOutput overwrites the style
     # output$questions_header <- renderUI({
     #   shiny::validate(need(
@@ -108,15 +108,25 @@ inquiryTemplateServer <- function(id, init_template) {
     #   ))
     # })
 
-    # observe questions ----
-    output$questions_table <- renderTable({
+    # render questions ----
+    output$questions_table <- renderDT({
       shiny::validate(need(
         nrow(init_template$questions) > 0,
         "Please add questions first ..."
       ))
-      init_template$questions
+      DT::datatable(init_template$questions,
+                    caption = "Questions dataframe: To change the value of a cell double click on it.",
+                    editable = TRUE)
     }, width = "100%")
 
+    observe({
+      logDebug("%s: Editing question dataframe.", id)
+      info <- input$questions_table_cell_edit
+      # update the reactive dataframe with the edited value
+      init_template$questions[info$row, info$col] <- info$value
+    }) %>% bindEvent(input$questions_table_cell_edit)
+
+    # observe questions ----
     new_question <- addQuestionServer("new_question", reactive(init_template$questions))
 
     observe({

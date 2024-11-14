@@ -35,7 +35,7 @@ loadInquiryServer <- function(id, submitted_templates) {
       title = "",
       ckanFileTypes = "json",
       importType = "list",
-      fileExtension = "json",
+      fileExtension = c("json", "bin"),
       options = DataTools::importOptions(rPackageName = "InquiryR")
 
     )

@@ -16,6 +16,7 @@ Imports:
   cyphr,
   DataTools (>= 24.11.0),
   dplyr,
+  DT,
   futile.logger,
   jsonlite,
   shiny,

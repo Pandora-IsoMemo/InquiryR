@@ -35,10 +35,9 @@ inquiryTemplateUI <- function(id) {
     tags$hr(),
     tags$br(),
     fluidRow(
-      column(10, #htmlOutput(ns("questions_header")), # HACK: <- avoid additional display of texts because surveyOutput overwrites the style
-             DTOutput(ns(
-               "questions_table"
-             ))),
+      column(10, DT::DTOutput(ns(
+        "questions_table"
+      ))),
       column(
         2,
         actionButton(ns("submit"), "Submit Template", width = "100%"),
@@ -91,25 +90,8 @@ inquiryTemplateServer <- function(id, init_template) {
       init_template$description <- input$description
     }) %>% bindEvent(input$description)
 
-
-    # observe header
-    # HACK: <- avoid additional display of texts because surveyOutput overwrites the style
-    # output$questions_header <- renderUI({
-    #   shiny::validate(need(
-    #     !is.null(init_template$title) && init_template$title != "",
-    #     "Please set a title ..."
-    #   ))
-    #
-    #   HTML(paste0(
-    #     "<h3>", init_template$title, "</h3>",
-    #     "<h4>", init_template$description, "</h4>",
-    #     "<br>",
-    #     "<p>Questions dataframe:</p>"
-    #   ))
-    # })
-
     # render questions ----
-    output$questions_table <- renderDT({
+    output$questions_table <- DT::renderDT({
       shiny::validate(need(
         nrow(init_template$questions) > 0,
         "Please add questions first ..."
@@ -126,7 +108,7 @@ inquiryTemplateServer <- function(id, init_template) {
       init_template$questions[info$row, info$col] <- info$value
     }) %>% bindEvent(input$questions_table_cell_edit)
 
-    # observe questions ----
+    # observe new/removed questions ----
     new_question <- addQuestionServer("new_question", reactive(init_template$questions))
 
     observe({
@@ -150,7 +132,8 @@ inquiryTemplateServer <- function(id, init_template) {
     observe({
       logDebug("%s: Enable/Disable 'Submit' button.", id)
       if (!is.null(init_template$title) &&
-          init_template$title != "" && nrow(init_template$questions) > 0) {
+          init_template$title != "" &&
+          nrow(init_template$questions) > 0) {
         shinyjs::enable(ns("submit"), asis = TRUE)
       } else {
         shinyjs::disable(ns("submit"), asis = TRUE)

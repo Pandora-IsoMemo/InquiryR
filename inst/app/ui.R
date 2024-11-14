@@ -12,8 +12,6 @@ tagList(
       sidebarPanel(
         width = 2,
         actionButton("load_example", "Example"),
-        tags$br(),
-        tags$br(),
         loadInquiryUI("load_template"),
         tags$br(),
         tags$br(),

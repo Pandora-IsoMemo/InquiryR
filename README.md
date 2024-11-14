@@ -1,6 +1,9 @@
 # InquiryR
 
-An app for creating Inquiry templates, conducting a survey, and downloading the results based on the shinysurveys package.
+An app for creating Inquiry templates, conducting a survey, and downloading the results based on the
+[shinysurveys package](https://github.com/jdtrat/shinysurveys).
+
+Please check the [vignette](https://shinysurveys.jdtrat.com/articles/surveying-shinysurveys.html) for more information.
 
 ## Release notes:
 

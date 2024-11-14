@@ -8,7 +8,7 @@ jags \
 qpdf \
 pandoc \
 libmagick++-dev \
-libsodium-dev \  # Add libsodium-dev for sodium R package
+libsodium-dev \
 && echo "options(repos = c(getOption('repos'), PANDORA = 'https://Pandora-IsoMemo.github.io/drat/'))" >> /usr/local/lib/R/etc/Rprofile.site \
 && installPackage
 

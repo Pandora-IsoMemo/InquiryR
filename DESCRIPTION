@@ -1,7 +1,7 @@
 Package: InquiryR
 Type: Package
 Title: Inquiry app for expert elicitation
-Version: 24.11.0
+Version: 24.11.1
 Authors@R: c(person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("aut", "cre")))
 Description: An app for creating Inquiry templates, conducting a survey, and downloading the results based on the shinysurveys package.
 License: GPL (>= 3)
@@ -13,8 +13,16 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports:
+  cyphr,
+  DataTools (>= 24.11.0),
+  dplyr,
+  DT,
   futile.logger,
   jsonlite,
   shiny,
+  shinyjs,
   shinysurveys,
-  shinyTools
+  shinyTools (>= 24.11.1),
+  shinyWidgets,
+  sodium,
+  stats

@@ -1,88 +1,153 @@
 shinyServer(function(input, output, session) {
   # Tab: Create Inquiry ----
-  # Placeholder for DataFrame creation
-  df <- reactiveVal(NULL)
+  inquiry_template <- empty_template()
 
-  observe({
-    if (!is.null(df())) {
-      shinyjs::enable("downloadTemplate", asis = TRUE)
-    } else {
-      shinyjs::disable("downloadTemplate", asis = TRUE)
-    }
+  observeEvent(input$load_example, {
+    # reset select_template input
+    updateSelectInput(session, "load_template-select_template", selected = character(0))
+
+    inquiry_template$title <- "Example Survey"
+    inquiry_template$description <- "This survey was generated from an example DataFrame."
+
+    inquiry_template$questions <- file.path("data", "example_questions.csv") %>%
+      read.csv() %>%
+      shinyTools::shinyTryCatch(errorTitle = "Reading example file failed", alertStyle = "shinyalert")
+
+    # notify user that the data frame was created
+    showNotification("An Inquiry Template has been loaded.", duration = 5)
   })
 
-  observeEvent(input$create_df, {
-    df(data.frame(
-      question = c("What is your name?", "How do you feel today?"),
-      option = c("", ""),
-      input_type = c("text", "text"),
-      input_id = c("name", "mood"),
-      dependence = c(NA, NA),
-      dependence_value = c(NA, NA),
-      required = c(TRUE, FALSE)
-    ))
-    # notify user that the data frame was created
-    showNotification("An Inquiry Template has been created.", duration = 5)
+  submitted_templates <- inquiryTemplateServer("inquiry_template", init_template = inquiry_template)
+
+  loaded_template <- loadInquiryServer("load_template", submitted_templates)
+
+  observeEvent(loaded_template$title, {
+    inquiry_template$title <- loaded_template$title
+    inquiry_template$description <- loaded_template$description
+    inquiry_template$questions <- loaded_template$questions
+  })
+
+  observe({
+    # update download/render choices
+    if (length(submitted_templates()) > 0) {
+      choices <- names(submitted_templates())
+    } else {
+      choices <- c("No inquiry available ..." = "")
+    }
+
+    updateSelectInput(session, "select_template", choices = choices)
   })
 
   # download template as json
-  output$downloadTemplate <- downloadHandler(
-    filename = function() { paste("inquiry_template", Sys.Date(), ".json", sep = "") },
-    content = function(file) {
-      # Convert to JSON
-      df_json <- jsonlite::toJSON(df(), pretty = TRUE, auto_unbox = TRUE)
+  observe({
+    # enable/disable download button
+    if (!is.null(input$select_template) &&
+        input$select_template != "") {
+      shinyjs::enable("download_template_execute", asis = TRUE)
+      shinyjs::enable("remove_template", asis = TRUE)
+    } else {
+      shinyjs::disable("download_template_execute", asis = TRUE)
+      shinyjs::disable("remove_template", asis = TRUE)
+    }
+  })
 
-      # Download the JSON file
-      write(df_json, file)
+  downloadType <- reactive({
+    if (isTRUE(is_encrypted(submitted_templates()[[input$select_template]]))) {
+      "bin"
+    } else {
+      "json"
+    }
+  })
+
+  output$download_template_execute <- downloadHandler(
+    filename = function() {
+      paste("inquiry_template_", Sys.Date(), ".", downloadType(), sep = "")
+    },
+    content = function(file) {
+      selected_template <- submitted_templates()[[input$select_template]]
+
+      if (is_encrypted(selected_template)) {
+        # Write the encrypted template to a file
+        zz <- file(file, "wb")
+        writeBin(selected_template, zz)
+        close(zz)
+      } else {
+        # Convert to JSON
+        inquiry_template_json <- jsonlite::toJSON(
+          sanitizeQuestionsForJson(submitted_templates()[[input$select_template]]),
+          pretty = TRUE,
+          auto_unbox = TRUE
+        )
+
+        # Download the JSON file
+        write(inquiry_template_json, file)
+      }
     }
   )
 
-  # Display the DataFrame in the table output
-  output$df_table <- renderTable({
-    shiny::validate(need(df(), "Please create an Inquiry template first."))
-    df()
+  observeEvent(input$remove_template, {
+    new_templates <- submitted_templates()
+
+    new_templates <- new_templates[!(input$select_template == names(new_templates))]
+    submitted_templates(new_templates)
   })
 
   # Tab: Respond to Inquiry ----
-  # Placeholder for survey responses
-  survey_data <- reactiveVal()
+  loaded_inquiry <- loadInquiryServer("load_inquiry", submitted_templates)
+
+  # Initialize a reactive flag
+  survey_ui_created <- reactiveVal(FALSE)
+  output$survey_ui <- renderUI({
+    shiny::validate(need(
+      nrow(loaded_inquiry$questions) > 0,
+      "Please load an inquiry first."
+    ))
+
+    survey_ui_created(TRUE)
+    # Use a div container with a unique class to scope the survey styling
+    div(
+      class = "survey-container",
+      # Survey output
+      shinysurveys::surveyOutput(
+        df = loaded_inquiry$questions %>% sanitizeQuestions(),
+        survey_title = loaded_inquiry$title,
+        survey_description = loaded_inquiry$description,
+        #theme = NULL # <- BUG: dependencies do not work if theme is NULL
+        theme = rgb(0, 0, 0, 0) # <- HACK: use transparent theme to avoid theme issues, because surveyOutput overwrites the style
+      ) %>%
+        shinyTools::shinyTryCatch(errorTitle = "Loading the Inquiry failed", alertStyle = "shinyalert")
+    )
+  })
 
   observe({
-    if (!is.null(survey_data())) {
-      shinyjs::enable("downloadData", asis = TRUE)
-    } else {
-      shinyjs::disable("downloadData", asis = TRUE)
-    }
+    req(isTRUE(survey_ui_created()))
+    shinysurveys::renderSurvey() %>%
+      shinyTools::shinyTryCatch(errorTitle = "Rendering the Inquiry failed", alertStyle = "shinyalert")
   })
 
   # Handle the Submit button action
+  survey_data <- reactiveVal()
   observeEvent(input$submit, {
-    # Collect the responses from input list
-    survey_data(data.frame(
-      input_id = df()$input_id,
-      response = sapply(df()$input_id, function(x) input[[x]])
-    ))
+    # Aggregate responses with getSurveyData()
+    survey_data(shinysurveys::getSurveyData())
 
     # notify user that the results were saved
     showNotification("Your responses have been saved.", duration = 5)
   })
 
   # Add a download button to trigger the download handler
-  output$survey_ui <- renderUI({
-    shiny::validate(need(df(), "Please create or load an Inquiry template first."))
-    shiny::validate(need(input$renderSurvey, "Please load an Inquiry template first."))
-    fluidPage(
-      # Survey output
-      shinysurveys::surveyOutput(
-        df = df(),
-        survey_title = "Custom Survey",
-        survey_description = "This survey was generated from a custom DataFrame."
-      )
-    )
+  observe({
+    if (!is.null(survey_data())) {
+      shinyjs::enable("download_response", asis = TRUE)
+    } else {
+      shinyjs::disable("download_response", asis = TRUE)
+    }
   })
 
-  output$downloadData <- downloadHandler(
-    filename = function() { paste("survey_results", Sys.Date(), ".json", sep = "") },
+  output$download_response <- downloadHandler(
+    filename = function() {
+      paste("survey_results", Sys.Date(), ".json", sep = "")
+    },
     content = function(file) {
       # Convert to JSON
       survey_json <- jsonlite::toJSON(survey_data(), pretty = TRUE, auto_unbox = TRUE)

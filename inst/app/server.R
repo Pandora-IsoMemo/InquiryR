@@ -9,9 +9,9 @@ shinyServer(function(input, output, session) {
     inquiry_template$title <- "Example Survey"
     inquiry_template$description <- "This survey was generated from an example DataFrame."
 
-    inquiry_template$questions <- file.path("data", "example_questions.csv") %>%
-      read.csv() %>%
-      shinyTools::shinyTryCatch(errorTitle = "Reading example file failed", alertStyle = "shinyalert")
+    inquiry_template$questions <-  shinyTools::shinyTryCatch(read.csv(file.path("data", "example_questions.csv")),
+                                                             errorTitle = "Reading example file failed",
+                                                             alertStyle = "shinyalert")
 
     # notify user that the data frame was created
     showNotification("An Inquiry Template has been loaded.", duration = 5)
@@ -108,21 +108,25 @@ shinyServer(function(input, output, session) {
     div(
       class = "survey-container",
       # Survey output
-      shinysurveys::surveyOutput(
-        df = loaded_inquiry$questions %>% sanitizeQuestions(),
-        survey_title = loaded_inquiry$title,
-        survey_description = loaded_inquiry$description,
-        #theme = NULL # <- BUG: dependencies do not work if theme is NULL
-        theme = rgb(0, 0, 0, 0) # <- HACK: use transparent theme to avoid theme issues, because surveyOutput overwrites the style
-      ) %>%
-        shinyTools::shinyTryCatch(errorTitle = "Loading the Inquiry failed", alertStyle = "shinyalert")
+      shinyTools::shinyTryCatch(
+        shinysurveys::surveyOutput(
+          df = sanitizeQuestions(loaded_inquiry$questions),
+          survey_title = loaded_inquiry$title,
+          survey_description = loaded_inquiry$description,
+          #theme = NULL # <- BUG: dependencies do not work if theme is NULL
+          theme = rgb(0, 0, 0, 0) # <- HACK: use transparent theme to avoid theme issues, because surveyOutput overwrites the style
+        ),
+        errorTitle = "Loading the Inquiry failed",
+        alertStyle = "shinyalert"
+      )
     )
   })
 
   observe({
     req(isTRUE(survey_ui_created()))
-    shinysurveys::renderSurvey() %>%
-      shinyTools::shinyTryCatch(errorTitle = "Rendering the Inquiry failed", alertStyle = "shinyalert")
+    shinyTools::shinyTryCatch(shinysurveys::renderSurvey(),
+                              errorTitle = "Rendering the Inquiry failed",
+                              alertStyle = "shinyalert")
   })
 
   # Handle the Submit button action

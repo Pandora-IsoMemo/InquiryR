@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">InquiryR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">24.11.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">24.11.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,6 +31,25 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="24.11.1" id="inquiryr-24111">InquiryR 24.11.1<a class="anchor" aria-label="anchor" href="#inquiryr-24111"></a></h2>
+<div class="section level3">
+<h3 id="new-features-24-11-1">New Features<a class="anchor" aria-label="anchor" href="#new-features-24-11-1"></a></h3>
+<ul><li>option to import and modify inquiry templates (#1)
+<ul><li>set an inquiry <em>name</em> and a <em>description</em>
+</li>
+<li>add <em>standard</em> questions as supported by <code>shinysurveys</code> package, see <a href="https://shinysurveys.jdtrat.com/articles/surveying-shinysurveys.html" class="external-link">vignette</a>
+</li>
+<li>remove questions from the template</li>
+<li>edit cells of the questions data frame</li>
+</ul></li>
+<li>option to add a password before saving a template (#2)
+<ul><li>the password is required to load the template: either to modify the template or to respond to the inquiry</li>
+<li>when a password is set, the template is saved as an encrypted object; the download is a <code>raw</code> file instead of a <code>json</code> file</li>
+<li>after import, the file is checked if it is encrypted and if so, the user must enter the password to load it</li>
+</ul></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="24.11.0" id="inquiryr-24110">InquiryR 24.11.0<a class="anchor" aria-label="anchor" href="#inquiryr-24110"></a></h2>
 <div class="section level3">

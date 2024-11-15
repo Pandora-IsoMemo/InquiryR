@@ -4,7 +4,14 @@
 <url><loc>https://pandora-isomemo.github.io/InquiryR/authors.html</loc></url>
 <url><loc>https://pandora-isomemo.github.io/InquiryR/index.html</loc></url>
 <url><loc>https://pandora-isomemo.github.io/InquiryR/news/index.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/InquiryR/reference/empty_template.html</loc></url>
 <url><loc>https://pandora-isomemo.github.io/InquiryR/reference/index.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/InquiryR/reference/inquiryTemplateServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/InquiryR/reference/is_encrypted.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/InquiryR/reference/loadInquiryServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/InquiryR/reference/sanitizeQuestions.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/InquiryR/reference/sanitizeQuestionsForJson.html</loc></url>
 <url><loc>https://pandora-isomemo.github.io/InquiryR/reference/startApplication.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/InquiryR/reference/validateImport.html</loc></url>
 </urlset>
 

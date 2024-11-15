@@ -269,12 +269,12 @@ createRandomID <- function(length = 8) {
 }
 
 extractOptions <- function(options, type) {
-  if (is.null(options) || options == "") {
-    return("")
-  }
-
   if (type == "y/n") {
     return(c("Yes", "No"))
+  }
+
+  if (is.null(options) || options == "") {
+    return("")
   }
 
   res <- strsplit(options, ",")[[1]]

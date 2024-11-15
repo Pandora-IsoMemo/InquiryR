@@ -3,6 +3,9 @@ shinyServer(function(input, output, session) {
   inquiry_template <- empty_template()
 
   observeEvent(input$load_example, {
+    # reset select_template input
+    updateSelectInput(session, "load_template-select_template", selected = character(0))
+
     inquiry_template$title <- "Example Survey"
     inquiry_template$description <- "This survey was generated from an example DataFrame."
 

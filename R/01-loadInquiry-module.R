@@ -96,6 +96,11 @@ loadInquiryServer <- function(id, submitted_templates) {
     observeEvent(input$load_execute, {
       logDebug("%s: Load template", id)
 
+      # reset template
+      for (name in names(empty_template())) {
+        inquiry_template[[name]] <- empty_template()[[name]]
+      }
+
       selected_template <- submitted_templates()[[input$select_template]]
 
       if (is_encrypted(selected_template)) {
@@ -114,10 +119,9 @@ loadInquiryServer <- function(id, submitted_templates) {
       }
 
       req(selected_template)
-      entries <- names(selected_template)
-
-      for (entry in entries) {
-        inquiry_template[[entry]] <- selected_template[[entry]]
+      # update template
+      for (name in names(selected_template)) {
+        inquiry_template[[name]] <- selected_template[[name]]
       }
     })
 

@@ -98,8 +98,9 @@ inquiryTemplateServer <- function(id, init_template) {
       ))
       DT::datatable(init_template$questions,
                     caption = "Questions dataframe: To change the value of a cell double click on it.",
-                    editable = TRUE)
-    }, width = "100%")
+                    editable = TRUE,
+                    width = "100%")
+    })
 
     observe({
       logDebug("%s: Editing question dataframe.", id)

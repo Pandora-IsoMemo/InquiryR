@@ -128,12 +128,8 @@ shinyServer(function(input, output, session) {
   # Handle the Submit button action
   survey_data <- reactiveVal()
   observeEvent(input$submit, {
-    # Collect the responses from input list
-    survey_data(data.frame(
-      input_id = loaded_inquiry$questions$input_id,
-      response = sapply(loaded_inquiry$questions$input_id, function(x)
-        input[[x]])
-    ))
+    # Aggregate responses with getSurveyData()
+    survey_data(shinysurveys::getSurveyData())
 
     # notify user that the results were saved
     showNotification("Your responses have been saved.", duration = 5)

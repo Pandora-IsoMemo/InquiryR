@@ -1,6 +1,4 @@
 library(shiny)
-library(shinysurveys)
-library(jsonlite)
 library(InquiryR)
 
 tagList(
@@ -10,35 +8,38 @@ tagList(
     position = "fixed-top",
     collapsible = TRUE,
     id = "tab",
-    tabPanel(
-      title = "Create Inquiry",
-      sidebarLayout(
-        sidebarPanel(
-          width = 2,
-          actionButton("create_df", "Create Example Template"),
-          tags$br(), tags$br(),
-          downloadButton("downloadTemplate", "Download")
+    tabPanel(title = "Create Inquiry", sidebarLayout(
+      sidebarPanel(
+        width = 2,
+        actionButton("load_example", "Example"),
+        loadInquiryUI("load_template"),
+        tags$br(),
+        tags$br(),
+        tags$br(),
+        selectInput(
+          "select_template",
+          "Select Template",
+          choices = c("No inquiry available ..." = "")
         ),
-        mainPanel(
-          tags$h3("Inquiry Template"),
-          tableOutput("df_table")
-        ),
-      )
-    ),
-    tabPanel(
-      title = "Respond to Inquiry",
-      sidebarLayout(
-        sidebarPanel(
-          width = 2,
-          actionButton("renderSurvey", "Load Inquiry Template"),
-          tags$br(), tags$br(),
-          downloadButton("downloadData", "Download")
-        ),
-        mainPanel(
-          uiOutput("survey_ui")
-        ),
-      )
-    )
+        downloadButton("download_template_execute", "Download"),
+        actionButton("remove_template", "Remove"),
+      ),
+      mainPanel(
+        shinyjs::useShinyjs(),
+        # Set up shinyjs,
+        inquiryTemplateUI("inquiry_template"),
+      ),
+    )),
+    tabPanel(title = "Respond to Inquiry", sidebarLayout(
+      sidebarPanel(
+        width = 2,
+        loadInquiryUI("load_inquiry"),
+        tags$br(),
+        tags$br(),
+        downloadButton("download_response", "Download Response")
+      ),
+      mainPanel(uiOutput("survey_ui")),
+    ))
   ),
   shinyTools::headerButtonsUI(id = "header", help_link = "https://pandora-isomemo.github.io/InquiryR/"),
   tags$head(

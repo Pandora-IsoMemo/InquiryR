@@ -21,8 +21,9 @@ Imports:
   jsonlite,
   shiny,
   shinyjs,
-  shinysurveys,
   shinyTools (>= 24.11.1),
   shinyWidgets,
   sodium,
   stats
+Remotes:
+	jdtrat/shinysurveys

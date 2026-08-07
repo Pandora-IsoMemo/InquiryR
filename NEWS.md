@@ -1,3 +1,9 @@
+# InquiryR 26.08.0
+
+## Updates
+- Upgraded Docker base image
+- Updated DataTools (24.11.0 -> 26.08.1) to the latest version to incorporate recent fixes
+
 # InquiryR 24.11.1
 
 ## New Features

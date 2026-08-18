@@ -14,7 +14,7 @@ Suggests:
 Config/testthat/edition: 3
 Imports:
   cyphr,
-  DataTools (>= 26.08.3),
+  DataTools (>= 26.08.2),
   dplyr,
   DT,
   futile.logger,

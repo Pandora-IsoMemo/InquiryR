@@ -1,6 +1,13 @@
-libLinux/*
-libWin/*
 .git
 .Rprofile
-Jenkinsfile
+.Rhistory
+.Rproj.user
+*.Rproj
+
 Dockerfile
+Jenkinsfile
+
+libLinux/*
+libWin/*
+docs/
+

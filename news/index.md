@@ -1,5 +1,12 @@
 # Changelog
 
+## InquiryR 26.08.1
+
+### Updates
+
+- Update .dockerignore, .gitignore, Rbuildignore
+- Added missing dependency to imports
+
 ## InquiryR 26.08.0
 
 ### Updates

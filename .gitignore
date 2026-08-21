@@ -1,6 +1,48 @@
-.Rproj.user
+# R session/user state
 .Rhistory
 .RData
 .Ruserdata
-inst/doc
-docs
+.Rproj.user/
+
+# Local environment/config
+.Renviron
+.env
+.env.*
+!.env.example
+
+# R package build/check artifacts
+*.tar.gz
+*.Rcheck/
+check/
+Meta/
+src/*.o
+src/*.so
+src/*.dll
+
+# Generated documentation/sites
+docs/
+inst/doc/
+
+# Test/coverage artifacts
+.Rcoverage
+covr/
+
+# Local dependency libraries
+lib/
+libLinux/*
+libWin/*
+libMac/*
+!libLinux/.gitignore
+!libWin/.gitignore
+!libMac/.gitignore
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+
+# Optional IDE/editor config
+.vscode/
